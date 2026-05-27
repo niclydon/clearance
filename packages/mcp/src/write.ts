@@ -1,5 +1,13 @@
 import type pg from 'pg';
-import type { Claim, RunPack, RunPackItem, WorkItem, WorkItemCandidate } from '@clearance/schema';
+import type {
+  Claim,
+  ProjectTrack,
+  ProjectTrackLink,
+  RunPack,
+  RunPackItem,
+  WorkItem,
+  WorkItemCandidate,
+} from '@clearance/schema';
 
 const HUMAN_BLOCKER_TAGS = [
   'requires_decision',
@@ -601,4 +609,150 @@ export async function runPackRecord(
     );
   }
   return rows[0];
+}
+
+const PROJECT_TRACK_LINK_KINDS = [
+  'work_item',
+  'project_candidate',
+  'repo',
+  'doc',
+  'chat_thread',
+  'external',
+  'note',
+];
+
+export interface CreateProjectTrackInput {
+  track_key: string;
+  title: string;
+  summary?: string;
+  status?: string;
+  track_kind?: string;
+  priority?: number;
+  owner?: string;
+  current_state?: string;
+  next_action?: string;
+  source?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export async function createProjectTrack(
+  pool: pg.Pool,
+  input: CreateProjectTrackInput,
+): Promise<ProjectTrack> {
+  const { rows } = await pool.query<ProjectTrack>(
+    `INSERT INTO project_tracks
+       (track_key, title, summary, status, track_kind, priority, owner, current_state, next_action, source, metadata)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+     RETURNING *`,
+    [
+      input.track_key,
+      input.title,
+      input.summary ?? '',
+      input.status ?? 'active',
+      input.track_kind ?? 'major_project',
+      input.priority ?? 3,
+      input.owner ?? null,
+      input.current_state ?? null,
+      input.next_action ?? null,
+      input.source ?? 'manual',
+      input.metadata ?? {},
+    ],
+  );
+  return rows[0]!;
+}
+
+export interface UpdateProjectTrackInput {
+  id: string;
+  title?: string;
+  summary?: string;
+  status?: string;
+  track_kind?: string;
+  priority?: number;
+  owner?: string;
+  current_state?: string;
+  next_action?: string;
+  stale_risk?: string;
+}
+
+export async function updateProjectTrack(
+  pool: pg.Pool,
+  input: UpdateProjectTrackInput,
+): Promise<ProjectTrack> {
+  const sets: string[] = [];
+  const params: unknown[] = [];
+  const push = (column: string, value: unknown): void => {
+    params.push(value);
+    sets.push(`${column} = $${params.length}`);
+  };
+  if (input.title !== undefined) push('title', input.title);
+  if (input.summary !== undefined) push('summary', input.summary);
+  if (input.status !== undefined) push('status', input.status);
+  if (input.track_kind !== undefined) push('track_kind', input.track_kind);
+  if (input.priority !== undefined) push('priority', input.priority);
+  if (input.owner !== undefined) push('owner', input.owner);
+  if (input.current_state !== undefined) push('current_state', input.current_state);
+  if (input.next_action !== undefined) push('next_action', input.next_action);
+  if (input.stale_risk !== undefined) push('stale_risk', input.stale_risk);
+  sets.push('updated_at = now()');
+  params.push(input.id);
+
+  const { rows } = await pool.query<ProjectTrack>(
+    `UPDATE project_tracks SET ${sets.join(', ')} WHERE id = $${params.length} RETURNING *`,
+    params,
+  );
+  if (!rows[0]) {
+    throw new GovernanceError(`Project track ${input.id} not found.`);
+  }
+  return rows[0];
+}
+
+export interface CreateProjectTrackLinkInput {
+  track_id: string;
+  link_kind: string;
+  relationship?: string;
+  target_ref?: string;
+  target_work_item_id?: number;
+  target_project_candidate_id?: string;
+  source_work_item_id?: number;
+  title?: string;
+  summary?: string;
+}
+
+export async function createProjectTrackLink(
+  pool: pg.Pool,
+  input: CreateProjectTrackLinkInput,
+): Promise<ProjectTrackLink> {
+  if (!PROJECT_TRACK_LINK_KINDS.includes(input.link_kind)) {
+    throw new GovernanceError(
+      `Unknown link_kind '${input.link_kind}'. Allowed: ${PROJECT_TRACK_LINK_KINDS.join(', ')}.`,
+    );
+  }
+  const relationship = input.relationship ?? 'related';
+  return withTx(pool, async (client) => {
+    const rel = await client.query('SELECT 1 FROM link_relationships WHERE relationship = $1', [
+      relationship,
+    ]);
+    if (rel.rowCount === 0) {
+      throw new GovernanceError(`Unknown relationship '${relationship}'.`);
+    }
+    const { rows } = await client.query<ProjectTrackLink>(
+      `INSERT INTO project_track_links
+         (track_id, link_kind, relationship, target_ref, target_work_item_id,
+          target_project_candidate_id, source_work_item_id, title, summary)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+      [
+        input.track_id,
+        input.link_kind,
+        relationship,
+        input.target_ref ?? '',
+        input.target_work_item_id ?? null,
+        input.target_project_candidate_id ?? null,
+        input.source_work_item_id ?? null,
+        input.title ?? null,
+        input.summary ?? null,
+      ],
+    );
+    return rows[0]!;
+  });
 }

@@ -22,11 +22,14 @@ import {
   claimNext,
   closeVerified,
   createCandidate,
+  createProjectTrack,
+  createProjectTrackLink,
   createWorkItem,
   promoteCandidate,
   rejectCandidate,
   runPackCreate,
   runPackRecord,
+  updateProjectTrack,
   updateWorkItem,
 } from './write.js';
 
@@ -346,6 +349,71 @@ export function createServer(pool: pg.Pool): McpServer {
       },
     },
     async (args) => guarded(() => runPackRecord(pool, args)),
+  );
+
+  server.registerTool(
+    'create_project_track',
+    {
+      title: 'Create a project track',
+      description:
+        'Create a durable project track (major project, operating program, repo project, or workstream).',
+      inputSchema: {
+        track_key: z.string(),
+        title: z.string(),
+        summary: z.string().optional(),
+        status: z.string().optional(),
+        track_kind: z.string().optional(),
+        priority: z.number().int().optional(),
+        owner: z.string().optional(),
+        current_state: z.string().optional(),
+        next_action: z.string().optional(),
+        source: z.string().optional(),
+      },
+    },
+    async (args) => guarded(() => createProjectTrack(pool, args)),
+  );
+
+  server.registerTool(
+    'update_project_track',
+    {
+      title: 'Update a project track',
+      description:
+        'Update a project track by id (status, priority, current state, next action, etc.).',
+      inputSchema: {
+        id: z.string(),
+        title: z.string().optional(),
+        summary: z.string().optional(),
+        status: z.string().optional(),
+        track_kind: z.string().optional(),
+        priority: z.number().int().optional(),
+        owner: z.string().optional(),
+        current_state: z.string().optional(),
+        next_action: z.string().optional(),
+        stale_risk: z.string().optional(),
+      },
+    },
+    async (args) => guarded(() => updateProjectTrack(pool, args)),
+  );
+
+  server.registerTool(
+    'create_project_track_link',
+    {
+      title: 'Link a project track to work',
+      description:
+        'Link a project track to a work item, candidate, repo, doc, or external reference with a relationship (anchor, advances, blocks, owns, evidence, ...).',
+      inputSchema: {
+        track_id: z.string(),
+        link_kind: z.string(),
+        relationship: z.string().optional(),
+        target_ref: z.string().optional(),
+        target_work_item_id: z.number().int().optional(),
+        target_project_candidate_id: z.string().optional(),
+        source_work_item_id: z.number().int().optional(),
+        title: z.string().optional(),
+        summary: z.string().optional(),
+      },
+    },
+    async (args) => guarded(() => createProjectTrackLink(pool, args)),
   );
 
   return server;

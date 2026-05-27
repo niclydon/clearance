@@ -24,7 +24,7 @@ The v1 core is implemented and tested:
 - **`@clearance/mcp`** — an MCP server (stdio) with read tools + `digest` and the mutating tools (intake, claims, blocking, verified close, run packs), enforcing the governance model (agents cannot self-grant `autonomous_safe`; verified close requires evidence).
 - **`@clearance/contracts`** — generic ProjectManager / ProjectWorker / ProjectInvestigator contracts and a reusable worker-loop prompt.
 
-Not yet built: the optional Discord review surface, project-track CRUD tools, and a REST API (out of v1). See [CHANGES.md](CHANGES.md) for detail.
+Not yet built: the optional Discord review surface and a REST API (out of v1). See [CHANGES.md](CHANGES.md) for detail.
 
 ## Quick start
 

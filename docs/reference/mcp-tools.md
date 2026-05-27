@@ -29,6 +29,8 @@ This page lists the planned MCP tools.
 | `close_verified` | Close a work item; requires evidence for tests, smoke, deploy, docs, migration, no_code. |
 | `run_pack_create` | Create a scoped, ordered execution list (a scoping instruction, never a safety grant). |
 | `run_pack_record` | Record per-item run-pack disposition. |
+| `create_project_track` / `update_project_track` | Create/update a durable project track. |
+| `create_project_track_link` | Link a track to a work item, candidate, repo, doc, or external reference. |
 
 **Governance enforcement:** `create_work_item` / `update_work_item` reject applying `autonomous_safe` unless `operator_grant=true` (agents cannot self-promote); `block_with_child` removes `autonomous_safe` on the parent; `run_pack_record` never changes a work item's tags. Governance failures return an `isError` tool result with a clear message.
 
@@ -38,7 +40,6 @@ This page lists the planned MCP tools.
 | --- | --- |
 | `investigate` | Record structured investigation disposition. |
 | `precondition_check` | Verify machine-checkable preconditions. |
-| `project_tracks` | Manage and inspect project tracks. |
 | `decision_thread` | Create and resolve decision threads. |
 
 ## Tool Contract Expectations

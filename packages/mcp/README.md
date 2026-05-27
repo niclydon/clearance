@@ -33,6 +33,7 @@ All list tools cap output at 200 rows (default 50) and accept `offset` for pagin
 | `block_with_child` | Create a blocker child, block + demote the parent, link them, release the claim. |
 | `close_verified` | Close with evidence for tests/smoke/deploy/docs/migration/no_code. |
 | `run_pack_create` / `run_pack_record` | Create a scoped execution list and record per-item dispositions. |
+| `create_project_track` / `update_project_track` / `create_project_track_link` | Manage durable project tracks and link them to work. |
 
 Governance: agents cannot self-apply `autonomous_safe` (it needs `operator_grant=true`); run packs never grant safety. Governance/validation failures return an `isError` tool result.
 

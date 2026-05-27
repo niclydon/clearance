@@ -25,5 +25,8 @@ export {
   validateCloseEvidence,
   runPackCreate,
   runPackRecord,
+  createProjectTrack,
+  updateProjectTrack,
+  createProjectTrackLink,
 } from './write.js';
 export type { CloseEvidence, ClaimNextResult } from './write.js';

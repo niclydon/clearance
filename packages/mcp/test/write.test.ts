@@ -9,11 +9,14 @@ import {
   claimNext,
   closeVerified,
   createCandidate,
+  createProjectTrack,
+  createProjectTrackLink,
   createWorkItem,
   promoteCandidate,
   rejectCandidate,
   runPackCreate,
   runPackRecord,
+  updateProjectTrack,
   updateWorkItem,
   validateCloseEvidence,
 } from '../src/write.js';
@@ -253,5 +256,50 @@ suite('clearance mcp write tools', () => {
     await expect(rejectCandidate(pool, { candidate_id: -1 })).rejects.toBeInstanceOf(
       GovernanceError,
     );
+  });
+
+  it('creates, updates, and links a project track', async () => {
+    const track = await createProjectTrack(pool, {
+      track_key: 'backup-reliability',
+      title: 'Backup reliability',
+    });
+    expect(track.track_key).toBe('backup-reliability');
+    expect(track.status).toBe('active');
+    expect(track.track_kind).toBe('major_project');
+    expect(track.priority).toBe(3);
+
+    const updated = await updateProjectTrack(pool, {
+      id: track.id,
+      status: 'blocked',
+      next_action: 'wait on the new NAS',
+    });
+    expect(updated.status).toBe('blocked');
+    expect(updated.next_action).toBe('wait on the new NAS');
+
+    const item = await createWorkItem(pool, { title: 'a tracked item' });
+    const link = await createProjectTrackLink(pool, {
+      track_id: track.id,
+      link_kind: 'work_item',
+      relationship: 'advances',
+      target_work_item_id: item.id,
+    });
+    expect(link.relationship).toBe('advances');
+    expect(link.target_work_item_id).toBe(item.id);
+
+    await expect(
+      createProjectTrackLink(pool, { track_id: track.id, link_kind: 'bogus' }),
+    ).rejects.toBeInstanceOf(GovernanceError);
+    await expect(
+      createProjectTrackLink(pool, {
+        track_id: track.id,
+        link_kind: 'work_item',
+        relationship: 'not_a_relationship',
+        target_work_item_id: item.id,
+      }),
+    ).rejects.toBeInstanceOf(GovernanceError);
+
+    await expect(
+      updateProjectTrack(pool, { id: '00000000-0000-0000-0000-000000000000', status: 'closed' }),
+    ).rejects.toBeInstanceOf(GovernanceError);
   });
 });
