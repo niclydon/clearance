@@ -35,4 +35,6 @@ The schema package should support:
 
 ## Current Status
 
-No Clearance schema has been implemented yet. This page documents the intended architecture.
+Implemented in `@clearance/schema` (`packages/schema`). The migration set (`migrations/0001`–`0007`) creates the full substrate from an empty database and seeds the reserved governance tags, work types, surfaces, and link relationships. The `applyMigrations` runner applies pending migrations in order, each in its own transaction, tracked in `clearance_migrations` so re-runs are no-ops. A fresh-database migration test verifies apply + idempotency + the governance invariants. The user-facing `migrate` CLI and generated TypeScript types are the next increment (Phase 1, schema CLI/types).
+
+See the [extraction map](../reference/extraction-map.md) for the source-to-generic table and column derivation, and [table groups](../reference/table-groups.md) for the implemented table list.

@@ -37,6 +37,7 @@ This page describes the planned schema groups, not finalized table DDL.
 - `work_types`: classification vocabulary.
 - `surfaces`: systems or surfaces where work appears.
 - `work_item_surfaces`: work-to-surface mapping.
+- `link_relationships`: vocabulary for `project_track_links.relationship`.
 
 ## Decisions
 
@@ -44,4 +45,4 @@ This page describes the planned schema groups, not finalized table DDL.
 
 ## Current Status
 
-Names may change during schema implementation if clarity or portability requires it.
+Implemented in `@clearance/schema` (`packages/schema/migrations/0001`–`0007`). These are the actual table names. See the [extraction map](extraction-map.md) for per-column detail and [schema architecture](../architecture/schema.md) for the migration/runner shape.
