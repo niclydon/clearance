@@ -1,0 +1,17 @@
+{
+  "name": "@clearance/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Reusable role and operating contracts for Clearance (ProjectManager, ProjectWorker, ProjectInvestigator). Not implemented yet.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}

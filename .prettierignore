@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.remember
+.codex
+package-lock.json
+
+# Documentation prose is authored by hand; Markdown link validity is enforced by
+# scripts/check-links.mjs rather than by reformatting. Do not let Prettier rewrite it.
+*.md
+docs/

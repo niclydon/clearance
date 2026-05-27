@@ -1,0 +1,17 @@
+{
+  "name": "@clearance/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "MCP server exposing the Clearance PMO system to MCP-compatible clients. Not implemented yet.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}

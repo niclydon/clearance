@@ -20,7 +20,14 @@ Clearance can be used by humans, automation, and AI coding agents. Agent executi
 
 This repository is in the founding documentation phase. The docs describe the planned public system and the extraction boundary from the PMO system already used inside Nexus.
 
-No runtime packages, schema migrations, MCP server, or bot adapters have landed yet.
+The repository is set up as an npm-workspaces monorepo with the planned packages (`@clearance/schema`, `@clearance/mcp`, `@clearance/contracts`) scaffolded and baseline checks (lint, format, typecheck, test, Markdown link check) wired up. No runtime packages, schema migrations, MCP server, or bot adapters have landed yet — the package scaffolds are placeholders.
+
+```bash
+npm install
+npm run check
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository layout and what each baseline check does.
 
 ## Start Here
 

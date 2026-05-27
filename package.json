@@ -1,0 +1,31 @@
+{
+  "name": "clearance",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Portable PMO and work-management system for complex technical systems.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "eslint packages",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "check:links": "node scripts/check-links.mjs",
+    "check": "npm run format && npm run lint && npm run typecheck && npm run test && npm run check:links"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.0",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.7"
+  }
+}
