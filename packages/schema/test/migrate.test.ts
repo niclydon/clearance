@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
-import { applyMigrations, listMigrationFiles } from '../src/migrate.js';
+import { applyMigrations, listMigrationFiles, migrationStatus } from '../src/migrate.js';
 
 const { Pool } = pg;
 
@@ -36,7 +36,7 @@ suite('clearance schema migrations', () => {
   let pool: pg.Pool;
 
   beforeAll(async () => {
-    pool = new Pool({ connectionString: url });
+    pool = new Pool({ connectionString: url, max: 1 });
     const { rows } = await pool.query<{ db: string }>('SELECT current_database() AS db');
     const db = rows[0]?.db ?? '';
     if (!/test/.test(db)) {
@@ -45,9 +45,15 @@ suite('clearance schema migrations', () => {
           'Point CLEARANCE_TEST_DATABASE_URL at a throwaway database.',
       );
     }
+    // Terminate any stray backends so a prior run's leftover connection cannot
+    // hold a lock that blocks the schema reset below.
+    await pool.query(
+      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+       WHERE datname = current_database() AND pid <> pg_backend_pid()`,
+    );
     await pool.query('DROP SCHEMA IF EXISTS public CASCADE');
     await pool.query('CREATE SCHEMA public');
-  });
+  }, 30000);
 
   afterAll(async () => {
     await pool?.end();
@@ -82,6 +88,12 @@ suite('clearance schema migrations', () => {
     const result = await applyMigrations({ pool });
     expect(result.applied).toEqual([]);
     expect(result.skipped).toEqual(listMigrationFiles());
+  });
+
+  it('reports migration status', async () => {
+    const status = await migrationStatus({ pool });
+    expect(status.applied).toEqual(listMigrationFiles());
+    expect(status.pending).toEqual([]);
   });
 
   it('enforces the blocked-is-not-autonomous_safe invariant', async () => {

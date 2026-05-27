@@ -2,11 +2,14 @@
   "name": "@clearance/schema",
   "version": "0.0.0",
   "private": true,
-  "description": "Postgres schema, migrations, seed data, and generated types for Clearance. Not implemented yet.",
+  "description": "Postgres schema, migrations, seed data, and types for the Clearance PMO substrate.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "clearance": "dist/cli.js"
+  },
   "files": [
     "dist",
     "migrations",

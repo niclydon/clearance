@@ -88,3 +88,40 @@ export async function applyMigrations(
   }
   return result;
 }
+
+export interface MigrationStatus {
+  applied: string[];
+  pending: string[];
+}
+
+/** Report which migrations are applied vs pending without changing anything. */
+export async function migrationStatus(
+  options: ApplyMigrationsOptions = {},
+): Promise<MigrationStatus> {
+  const dir = options.migrationsDir ?? MIGRATIONS_DIR;
+  const all = listMigrationFiles(dir);
+  const ownsPool = !options.pool;
+  const pool =
+    options.pool ??
+    new Pool({ connectionString: options.connectionString ?? process.env.DATABASE_URL });
+  try {
+    const registry = await pool.query<{ present: boolean }>(
+      "SELECT to_regclass('clearance_migrations') IS NOT NULL AS present",
+    );
+    if (!registry.rows[0]?.present) {
+      return { applied: [], pending: all };
+    }
+    const { rows } = await pool.query<{ version: string }>(
+      'SELECT version FROM clearance_migrations',
+    );
+    const done = new Set(rows.map((row) => row.version));
+    return {
+      applied: all.filter((file) => done.has(file)),
+      pending: all.filter((file) => !done.has(file)),
+    };
+  } finally {
+    if (ownsPool) {
+      await pool.end();
+    }
+  }
+}
