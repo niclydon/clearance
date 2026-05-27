@@ -60,4 +60,4 @@ It must not:
 
 ## Current Status
 
-Role contracts are planned as Markdown artifacts and reusable prompt templates. They will be generic enough to adapt to different agent tools.
+The role contracts are implemented as generic, adaptable Markdown in `@clearance/contracts` — see the [role contracts reference](../reference/role-contracts.md) for links to each, plus a reusable worker-loop prompt.

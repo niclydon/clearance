@@ -55,4 +55,11 @@ Must not:
 
 ## Current Status
 
-The detailed role contracts are planned for `@clearance/contracts`.
+The detailed contracts are implemented as Markdown in `@clearance/contracts`:
+
+- [ProjectWorker](../../packages/contracts/contracts/project-worker.md)
+- [ProjectInvestigator](../../packages/contracts/contracts/project-investigator.md)
+- [ProjectManager](../../packages/contracts/contracts/project-manager.md)
+- [Worker-loop prompt](../../packages/contracts/contracts/worker-loop-prompt.md)
+
+They are generic (parameterized for repo path, verification/deploy commands, review channel, and tool names) and reference the implemented Clearance MCP tools.
