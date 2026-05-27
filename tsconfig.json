@@ -1,7 +1,10 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@clearance/schema": ["./packages/schema/src/index.ts"]
+    }
   },
   "include": ["packages/*/src/**/*.ts"]
 }

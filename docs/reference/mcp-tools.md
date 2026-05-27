@@ -2,7 +2,19 @@
 
 This page lists the planned MCP tools.
 
-## Core Tools
+## Read Tools (implemented in `@clearance/mcp`)
+
+| Tool | Purpose |
+| --- | --- |
+| `list_work_items` | Query work items with status / tag / work_type / category filters (paginated). |
+| `get_work_item` | Fetch a single work item by id. |
+| `list_work_item_candidates` | List proposed work awaiting review. |
+| `list_project_tracks` | List durable project tracks. |
+| `list_claims` | List worker claims/leases. |
+| `list_run_packs` | List scoped execution batches. |
+| `digest` | Summarize ready, blocked, active/stale claims, pending candidates, and recent completions. |
+
+## Write Tools (planned)
 
 | Tool | Purpose |
 | --- | --- |
@@ -12,11 +24,9 @@ This page lists the planned MCP tools.
 | `block_with_child` | Create blocker child work, block parent, and release claim. |
 | `create_work_item` | Create accepted work when authorized. |
 | `update_work_item` | Update status, tags, priority, body, and notes. |
-| `list_work_items` | Query work with filters. |
 | `create_candidate` | File proposed work for review. |
 | `run_pack_create` | Create a scoped execution list. |
 | `run_pack_record` | Record per-item run-pack disposition. |
-| `digest` | Summarize ready, active, blocked, candidate, and completed work. |
 
 ## Later Tools
 
@@ -33,4 +43,4 @@ Tools should declare whether they are read-only or mutating. Mutating tools shou
 
 ## Current Status
 
-Tool names and exact schemas are planned. They should be finalized with implementation and tests.
+The read tools and `digest` are implemented and tested in `@clearance/mcp` (paginated, read-only, verified via an in-memory MCP client round-trip). The write tools are the next increment.
