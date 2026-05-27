@@ -10,6 +10,7 @@ Reference docs define the durable contracts Clearance users and builders need.
 - [Evidence requirements](evidence-requirements.md): verified close contract.
 - [Role contracts](role-contracts.md): manager, worker, and investigator responsibilities.
 - [Source design doc](clearance-governance-framework-design-doc.md): original design material preserved for provenance.
+- [Extraction map](extraction-map.md): table-by-table and tool-by-tool plan for extracting the generic substrate from the Nexus PMO source.
 
 ## Current Status
 
