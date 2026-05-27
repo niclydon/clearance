@@ -2,6 +2,7 @@
 import { pathToFileURL } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type pg from 'pg';
 import { z } from 'zod';
 import { closePool, getPool } from './db.js';
@@ -14,12 +15,44 @@ import {
   listWorkItemCandidates,
   listWorkItems,
 } from './read.js';
+import {
+  GovernanceError,
+  blockWithChild,
+  claimHeartbeat,
+  claimNext,
+  closeVerified,
+  createCandidate,
+  createWorkItem,
+  runPackCreate,
+  runPackRecord,
+  updateWorkItem,
+} from './write.js';
 
 const SERVER_VERSION = '0.1.0';
 
-function json(value: unknown): { content: { type: 'text'; text: string }[] } {
+function json(value: unknown): CallToolResult {
   return { content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] };
 }
+
+/** Run a mutating tool, surfacing governance/validation failures as tool errors. */
+async function guarded(fn: () => Promise<unknown>): Promise<CallToolResult> {
+  try {
+    return json(await fn());
+  } catch (error) {
+    const message =
+      error instanceof GovernanceError ? error.message : `${(error as Error).message}`;
+    return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true };
+  }
+}
+
+const evidenceBucketShape = z.object({
+  status: z.enum(['passed', 'not_applicable']),
+  reason: z.string().optional(),
+  command: z.string().optional(),
+  result: z.string().optional(),
+  summary: z.string().optional(),
+  artifact: z.string().optional(),
+});
 
 const listFilterShape = {
   status: z.string().optional().describe('Filter by exact status value.'),
@@ -107,6 +140,173 @@ export function createServer(pool: pg.Pool): McpServer {
       inputSchema: {},
     },
     async () => json(await digest(pool)),
+  );
+
+  // --- Write tools ---
+
+  server.registerTool(
+    'create_candidate',
+    {
+      title: 'Create a work-item candidate',
+      description: 'File proposed work for human review (candidate-first doctrine).',
+      inputSchema: {
+        proposed_title: z.string(),
+        proposed_body: z.string().optional(),
+        proposed_category: z.string().optional(),
+        proposed_priority: z.number().int().optional(),
+        filter_reason: z.string().optional(),
+        source: z.string().optional(),
+        external_ref: z.string().optional(),
+        source_content: z.string().optional(),
+      },
+    },
+    async (args) => guarded(() => createCandidate(pool, args)),
+  );
+
+  server.registerTool(
+    'create_work_item',
+    {
+      title: 'Create a work item',
+      description:
+        'Create accepted work. Governance tags are validated; autonomous_safe requires operator_grant.',
+      inputSchema: {
+        title: z.string(),
+        body: z.string().optional(),
+        category: z.string().optional(),
+        priority: z.number().int().optional(),
+        source: z.string().optional(),
+        work_type: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+        operator_note: z.string().optional(),
+        operator_grant: z.boolean().optional(),
+      },
+    },
+    async (args) => guarded(() => createWorkItem(pool, args)),
+  );
+
+  server.registerTool(
+    'update_work_item',
+    {
+      title: 'Update a work item',
+      description:
+        'Update status/priority/body/notes/work_type and add/remove governance tags (audit-logged). ' +
+        'Adding autonomous_safe requires operator_grant=true.',
+      inputSchema: {
+        id: z.number().int(),
+        status: z.string().optional(),
+        priority: z.number().int().optional(),
+        body: z.string().optional(),
+        operator_note: z.string().optional(),
+        work_type: z.string().optional(),
+        add_tags: z.array(z.string()).optional(),
+        remove_tags: z.array(z.string()).optional(),
+        operator_grant: z.boolean().optional(),
+      },
+    },
+    async (args) => guarded(() => updateWorkItem(pool, args)),
+  );
+
+  server.registerTool(
+    'claim_next',
+    {
+      title: 'Claim the next eligible work item',
+      description:
+        'Claim the highest-priority autonomous_safe work item with no active claim and no human-blocker tags.',
+      inputSchema: {
+        runner_id: z.string(),
+        runner_kind: z.string().optional(),
+        lease_minutes: z.number().int().optional(),
+        session_ref: z.string().optional(),
+        repo_path: z.string().optional(),
+        branch_name: z.string().optional(),
+        worktree_path: z.string().optional(),
+      },
+    },
+    async (args) => guarded(() => claimNext(pool, args)),
+  );
+
+  server.registerTool(
+    'claim_heartbeat',
+    {
+      title: 'Heartbeat a claim',
+      description: 'Extend an active claim lease.',
+      inputSchema: {
+        claim_id: z.string(),
+        lease_minutes: z.number().int().optional(),
+      },
+    },
+    async (args) => guarded(() => claimHeartbeat(pool, args)),
+  );
+
+  server.registerTool(
+    'block_with_child',
+    {
+      title: 'Block a work item with a blocker child',
+      description:
+        'Create a blocker child work item, mark the parent blocked (removing autonomous_safe), link them, and release the claim.',
+      inputSchema: {
+        parent_id: z.number().int(),
+        child_title: z.string(),
+        child_body: z.string().optional(),
+        child_tags: z.array(z.string()).optional(),
+        blocker_reason: z.string().optional(),
+        claim_id: z.string().optional(),
+      },
+    },
+    async (args) => guarded(() => blockWithChild(pool, args)),
+  );
+
+  server.registerTool(
+    'close_verified',
+    {
+      title: 'Close a work item with evidence',
+      description:
+        'Close a work item. Requires evidence for tests, smoke, deploy, docs, migration, and no_code (passed with proof, or not_applicable with a reason).',
+      inputSchema: {
+        id: z.number().int(),
+        resolution_text: z.string(),
+        evidence: z.record(z.string(), evidenceBucketShape),
+        claim_id: z.string().optional(),
+      },
+    },
+    async (args) => guarded(() => closeVerified(pool, args)),
+  );
+
+  server.registerTool(
+    'run_pack_create',
+    {
+      title: 'Create a run pack',
+      description:
+        'Create a scoped, ordered execution list. A run pack is a scoping instruction, never a safety grant.',
+      inputSchema: {
+        run_pack_key: z.string(),
+        intent: z.string(),
+        work_item_ids: z.array(z.number().int()),
+        issued_by: z.string().optional(),
+        launch_text: z.string().optional(),
+      },
+    },
+    async (args) => guarded(() => runPackCreate(pool, args)),
+  );
+
+  server.registerTool(
+    'run_pack_record',
+    {
+      title: 'Record a run-pack item disposition',
+      description:
+        'Record the per-item result within a run pack (shipped/blocked/skipped_not_eligible/failed).',
+      inputSchema: {
+        run_pack_id: z.string(),
+        work_item_id: z.number().int(),
+        result: z.string(),
+        result_reason: z.string().optional(),
+        pr_number: z.number().int().optional(),
+        merge_commit: z.string().optional(),
+        child_work_item_ids: z.array(z.number().int()).optional(),
+        claim_id: z.string().optional(),
+      },
+    },
+    async (args) => guarded(() => runPackRecord(pool, args)),
   );
 
   return server;

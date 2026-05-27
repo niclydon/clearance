@@ -11,3 +11,17 @@ export {
   digest,
 } from './read.js';
 export type { ListResult, ListWorkItemsFilters, Digest } from './read.js';
+export {
+  GovernanceError,
+  createCandidate,
+  createWorkItem,
+  updateWorkItem,
+  claimNext,
+  claimHeartbeat,
+  blockWithChild,
+  closeVerified,
+  validateCloseEvidence,
+  runPackCreate,
+  runPackRecord,
+} from './write.js';
+export type { CloseEvidence, ClaimNextResult } from './write.js';

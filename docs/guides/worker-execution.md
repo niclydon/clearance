@@ -30,6 +30,10 @@ A worker should stop when it encounters:
 
 The close record should make the outcome understandable later. It should include what changed, what was verified, what was not applicable, and whether deployment occurred.
 
+## MCP tools for the loop
+
+The `@clearance/mcp` server implements this loop: `claim_next` (steps 1–2), `claim_heartbeat` (step 6), `close_verified` (step 8, requires evidence), and `block_with_child` (step 8 alternative — creates the blocker child, blocks and demotes the parent, and releases the claim). `claim_next` only returns `autonomous_safe` items with no active claim and no human-blocker tags, so the stop conditions are enforced by eligibility, not convention.
+
 ## Current Status
 
-This guide defines intended behavior. Exact command and tool examples will be added after MCP tools are implemented.
+Implemented in `@clearance/mcp`. See the [MCP tools reference](../reference/mcp-tools.md).

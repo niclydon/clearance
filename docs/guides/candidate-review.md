@@ -28,6 +28,10 @@ When reviewing a candidate, ask:
 
 Agent-filed candidates should include provenance and evidence. A reviewer should not need to trust the agent's summary without context.
 
+## MCP tools
+
+Agents and managers file candidates with `create_candidate` (they cannot create real work items as a side effect). A reviewer promotes a candidate by creating the work item (`create_work_item`) and recording the candidate's disposition. Promotion to `autonomous_safe` is a human grant (`update_work_item` with `operator_grant=true`), never something the filing agent can do. See the [MCP tools reference](../reference/mcp-tools.md).
+
 ## Current Status
 
-Candidate review exists in the source PMO and is planned for Clearance's public MCP and optional review surfaces.
+`create_candidate` is implemented in `@clearance/mcp`. The optional review surface (cards/buttons) is a later layer.

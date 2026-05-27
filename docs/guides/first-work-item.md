@@ -26,6 +26,10 @@ After investigation, a human or authorized manager could promote it to `autonomo
 5. Block with a child item if execution discovers a concrete blocker.
 6. Close with evidence when complete.
 
+## MCP tools
+
+The flow maps to `create_work_item` (or promote a candidate), `update_work_item` (tags/status — note `autonomous_safe` requires `operator_grant`), `claim_next`, `block_with_child`, and `close_verified`. See the [MCP tools reference](../reference/mcp-tools.md).
+
 ## Current Status
 
-The work-item flow is planned. Exact tool names will be updated after MCP implementation.
+Implemented in `@clearance/mcp`.

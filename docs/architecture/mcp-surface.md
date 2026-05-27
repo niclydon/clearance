@@ -37,4 +37,4 @@ The product identity is the PMO/work-management system.
 
 ## Current Status
 
-The MCP server is implemented in `@clearance/mcp` with the read-only tool set (`list_work_items`, `get_work_item`, `list_work_item_candidates`, `list_project_tracks`, `list_claims`, `list_run_packs`, `digest`) over stdio, bound to a Clearance Postgres database. Output is bounded/paginated and the result shape is stable JSON. The mutating tools (claim, block, close-with-evidence, intake, run packs) are the next increment. See [MCP tools reference](../reference/mcp-tools.md).
+The MCP server is implemented in `@clearance/mcp` over stdio, bound to a Clearance Postgres database, with the full v1 tool set: the read tools + `digest`, and the mutating tools (`create_candidate`, `create_work_item`, `update_work_item`, `claim_next`, `claim_heartbeat`, `block_with_child`, `close_verified`, `run_pack_create`, `run_pack_record`). Output is bounded/paginated with a stable JSON shape; mutations are transaction-safe and enforce the governance model (agents cannot self-promote to `autonomous_safe`; verified close requires evidence). See [MCP tools reference](../reference/mcp-tools.md).

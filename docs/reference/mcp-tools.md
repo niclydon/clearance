@@ -14,19 +14,21 @@ This page lists the planned MCP tools.
 | `list_run_packs` | List scoped execution batches. |
 | `digest` | Summarize ready, blocked, active/stale claims, pending candidates, and recent completions. |
 
-## Write Tools (planned)
+## Write Tools (implemented in `@clearance/mcp`)
 
 | Tool | Purpose |
 | --- | --- |
-| `claim_next` | Claim the highest-priority eligible work item. |
+| `create_candidate` | File proposed work for review (candidate-first). |
+| `create_work_item` | Create accepted work. `autonomous_safe` requires `operator_grant`. |
+| `update_work_item` | Update status, priority, body, notes, work_type, and add/remove tags (audited). |
+| `claim_next` | Claim the highest-priority eligible work item (expires stale claims, one active claim per item, race-safe). |
 | `claim_heartbeat` | Extend an active claim lease. |
-| `close_verified` | Close a work item with evidence. |
-| `block_with_child` | Create blocker child work, block parent, and release claim. |
-| `create_work_item` | Create accepted work when authorized. |
-| `update_work_item` | Update status, tags, priority, body, and notes. |
-| `create_candidate` | File proposed work for review. |
-| `run_pack_create` | Create a scoped execution list. |
+| `block_with_child` | Create a blocker child, block the parent (demoting `autonomous_safe`), link them, release the claim. |
+| `close_verified` | Close a work item; requires evidence for tests, smoke, deploy, docs, migration, no_code. |
+| `run_pack_create` | Create a scoped, ordered execution list (a scoping instruction, never a safety grant). |
 | `run_pack_record` | Record per-item run-pack disposition. |
+
+**Governance enforcement:** `create_work_item` / `update_work_item` reject applying `autonomous_safe` unless `operator_grant=true` (agents cannot self-promote); `block_with_child` removes `autonomous_safe` on the parent; `run_pack_record` never changes a work item's tags. Governance failures return an `isError` tool result with a clear message.
 
 ## Later Tools
 
@@ -43,4 +45,4 @@ Tools should declare whether they are read-only or mutating. Mutating tools shou
 
 ## Current Status
 
-The read tools and `digest` are implemented and tested in `@clearance/mcp` (paginated, read-only, verified via an in-memory MCP client round-trip). The write tools are the next increment.
+The full v1 tool set — read tools, `digest`, and the mutating tools (intake, claims, blocking, verified close, run packs) — is implemented and tested in `@clearance/mcp`, including governance enforcement (no agent self-promotion to `autonomous_safe`) and verified-close evidence validation.

@@ -29,6 +29,10 @@ An operator might use Clearance in a daily rhythm:
 6. Launch a worker loop or run pack.
 7. Review closes and evidence.
 
+## MCP tools
+
+The `digest` tool returns the ready queue, blocked count, active and stale claims, pending candidates, and recent completions. The review rhythm uses `digest` (step 1), `list_work_item_candidates` + `create_work_item` (steps 2–3), `update_work_item` with `operator_grant` to approve safe work (step 3), `claim_next` / `run_pack_create` to launch execution (step 6), and `list_claims` / `get_work_item` to review closes (step 7). See the [MCP tools reference](../reference/mcp-tools.md).
+
 ## Current Status
 
-Digest tooling is planned for the MCP server and optional review surface.
+The `digest` tool is implemented in `@clearance/mcp`. The scheduled-posting review surface is a later optional layer.
