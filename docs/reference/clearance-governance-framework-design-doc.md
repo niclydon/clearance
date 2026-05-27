@@ -106,7 +106,7 @@ These tables have zero dependencies on Nexus’s biographical intelligence, PIE 
 - Biographical intelligence (knowledge_facts, social_identities, photos, communications)
 - PIE pipeline (proactive insights, context snapshots)
 - Aurora gold-layer views
-- Forge/LLM integration (the extracted product is LLM-agnostic)
+- LLM-provider integration (the extracted product is LLM-agnostic)
 - Discord gateway (the extracted product is chat-platform-agnostic)
 
 -----
@@ -287,7 +287,7 @@ When preconditions are satisfied, the item auto-arms without human intervention.
 
 ## Naming: Clearance
 
-**Clearance** was chosen for public legibility over the internal blacksmith/shipping naming convention (Furnace, Broadside, Forge, etc.). Someone landing on the GitHub repo cold should understand what the product does from the name alone.
+**Clearance** was chosen for public legibility over the source system's internal codename convention. Someone landing on the GitHub repo cold should understand what the product does from the name alone.
 
 The name works on three levels:
 
@@ -329,16 +329,16 @@ Extract the Discord bot into a pluggable adapter. Publish `@clearance/bot-discor
 
 ### Phase 6: Public Launch
 
-Repo, docs site, launch post (the Mosvera playbook: spec + runtime + examples + site). The narrative docs from Nexus become the case studies.
+Repo, docs site, launch post (a proven launch playbook: spec + runtime + examples + site). The narrative docs from the source system become the case studies.
 
 -----
 
 ## Open Questions
 
-1. **License:** MIT? Apache 2.0? Dual license like Mosvera?
+1. **License:** MIT? Apache 2.0? Dual license?
 1. **Postgres-only or abstract the storage?** Postgres is the right answer for v1. The governance model relies on transactions, JSONB, and triggers (`pg_notify` for event-driven re-elicit). Abstracting storage adds complexity without users asking for it. SQLite adapter as a future community contribution for single-user setups.
 1. **How opinionated on the tag vocabulary?** Ship the 8 governance tags as defaults but allow extension? Or enforce the core 8 and let users add custom non-governance tags? Recommendation: enforce the core 8 (they encode the governance model), allow custom tags in a separate namespace.
 1. **MCP-only or also REST?** MCP is the primary interface (it’s how AI agents talk to tools). A REST API for human dashboards and webhooks is Phase 2+ work.
 1. **Relationship to Nexus:** Does Nexus switch to using Clearance as a dependency, or does Clearance remain a fork that evolves independently? Recommendation: Clearance is the upstream. Nexus becomes a consumer. The governance tables in Nexus are replaced by `@clearance/schema` with Nexus-specific extensions layered on top.
-1. **Deploy wrapper:** The `projectworker-deploy-nexus.sh` pattern (one audited command that gates all privileged operations) is powerful but deeply environment-specific. Ship the concept and the example, not a generic deploy wrapper. Users write their own for their deploy pipeline.
+1. **Deploy wrapper:** The "one audited command that gates all privileged operations" pattern is powerful but deeply environment-specific. Ship the concept and the example, not a generic deploy wrapper. Users write their own for their deploy pipeline.
 1. **The daily builder’s blog and Clearance:** The daily blog pipeline (designed earlier this session) could be the first non-Nexus consumer of Clearance. It has work items (daily posts), governance (operator review before publish), and a pipeline. Good dogfood candidate.

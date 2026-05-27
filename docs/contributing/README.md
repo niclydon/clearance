@@ -8,6 +8,7 @@ The project should be usable by someone who does not know the Nexus origin story
 
 - [Documentation standards](documentation-standards.md)
 - [Implementation workflow](implementation-workflow.md)
+- [Releasing](releasing.md) — the public-launch and npm-publish checklist.
 
 ## Contribution Principles
 

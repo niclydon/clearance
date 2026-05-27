@@ -86,7 +86,7 @@ Out of scope for the public PMO package:
 - domain-specific source ingestion and enrichment pipelines
 - Nexus-specific agent rosters and identity systems
 - platform-specific Discord automation as a required dependency
-- Forge or any specific LLM provider dependency
+- any specific LLM provider dependency
 - private service deploy scripts or local homelab assumptions
 
 Clearance can integrate with those kinds of systems through documented adapters, but it should not require them.

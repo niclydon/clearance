@@ -17,7 +17,7 @@ The source schema was captured by live schema inspection of the Nexus Postgres d
 
 ## 1. Table lineage matrix
 
-The governance substrate is 15 core tables plus an optional decision-thread table and the controlled-vocabulary tables. None depend on Nexus biographical intelligence, the PIE pipeline, Forge/LLM integration, or the Discord gateway.
+The governance substrate is 15 core tables plus an optional decision-thread table and the controlled-vocabulary tables. None depend on Nexus biographical intelligence, the PIE pipeline, the LLM-provider integration, or the chat gateway.
 
 | Group | Nexus source table | Clearance table | Action |
 |---|---|---|---|
@@ -145,7 +145,7 @@ DROP `autonomous_after_decision` — the ninth tag in Nexus is a decision-loop a
 
 ### Surfaces (`surfaces` seed) — genericize
 
-The Nexus surface vocabulary (31 values: `nexus`, `forge`, `aria`, `broadside`, `gmail`, `strava`, …) is entirely Nexus-specific and is **not** seeded into Clearance. Ship a minimal portable seed and let each deployment extend it: `schema`, `mcp`, `cli`, `api`, `docs`, `ci`, `deploy`, `worker`. Surfaces are explicitly extensible per deployment.
+The source system's surface vocabulary (31 deployment-specific values — its own services, data sources, and integrations) is entirely Nexus-specific and is **not** seeded into Clearance. Ship a minimal portable seed and let each deployment extend it: `schema`, `mcp`, `cli`, `api`, `docs`, `ci`, `deploy`, `worker`. Surfaces are explicitly extensible per deployment.
 
 ### `work_item_links.link_kind` — 5 values
 

@@ -18,16 +18,32 @@ Clearance can be used by humans, automation, and AI coding agents. Agent executi
 
 ## Current Status
 
-This repository is in the founding documentation phase. The docs describe the planned public system and the extraction boundary from the PMO system already used inside Nexus.
+The v1 core is implemented and tested:
 
-The repository is set up as an npm-workspaces monorepo with the planned packages (`@clearance/schema`, `@clearance/mcp`, `@clearance/contracts`) scaffolded and baseline checks (lint, format, typecheck, test, Markdown link check) wired up. No runtime packages, schema migrations, MCP server, or bot adapters have landed yet — the package scaffolds are placeholders.
+- **`@clearance/schema`** — the Postgres PMO substrate: numbered migrations from an empty database, seeded governance tags / work types / surfaces / link relationships, an `applyMigrations` runner, generated types, and a `clearance` migrate/status CLI.
+- **`@clearance/mcp`** — an MCP server (stdio) with read tools + `digest` and the mutating tools (intake, claims, blocking, verified close, run packs), enforcing the governance model (agents cannot self-grant `autonomous_safe`; verified close requires evidence).
+- **`@clearance/contracts`** — generic ProjectManager / ProjectWorker / ProjectInvestigator contracts and a reusable worker-loop prompt.
+
+Not yet built: the optional Discord review surface, a couple of convenience tools (candidate promotion, project-track CRUD), and a REST API (out of v1). See [CHANGES.md](CHANGES.md) for detail.
+
+## Quick start
+
+Requires PostgreSQL 14+ and Node 20+.
 
 ```bash
 npm install
-npm run check
+npm run build
+
+# Install the schema into a fresh database.
+createdb clearance
+DATABASE_URL=postgres://localhost/clearance npx clearance migrate
+
+# Point an MCP client (Claude Code, Codex, Cursor, ...) at the server:
+#   { "mcpServers": { "clearance": { "command": "npx", "args": ["@clearance/mcp"],
+#     "env": { "DATABASE_URL": "postgres://localhost/clearance" } } } }
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the repository layout and what each baseline check does.
+See [first setup](docs/guides/first-setup.md) for the full walkthrough and [examples/dogfood](examples/dogfood/) for a complete lifecycle run.
 
 ## Start Here
 
@@ -45,4 +61,4 @@ Clearance is the public, standalone extraction of the PMO/work-management system
 
 ## License
 
-Clearance is released under the Apache License 2.0. The `LICENSE` file lands with the repository scaffold. See [decision records](docs/architecture/decision-records.md) for the founding decisions that shape the project, including license, packaging, storage, and interface scope.
+Clearance is released under the [Apache License 2.0](LICENSE). See [decision records](docs/architecture/decision-records.md) for the founding decisions that shape the project, including license, packaging, storage, and interface scope.
