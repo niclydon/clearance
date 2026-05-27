@@ -19,6 +19,8 @@ This page lists the planned MCP tools.
 | Tool | Purpose |
 | --- | --- |
 | `create_candidate` | File proposed work for review (candidate-first). |
+| `promote_candidate` | Promote a candidate to a work item (with optional overrides), mark it approved, and link them. |
+| `reject_candidate` | Mark a candidate rejected. |
 | `create_work_item` | Create accepted work. `autonomous_safe` requires `operator_grant`. |
 | `update_work_item` | Update status, priority, body, notes, work_type, and add/remove tags (audited). |
 | `claim_next` | Claim the highest-priority eligible work item (expires stale claims, one active claim per item, race-safe). |

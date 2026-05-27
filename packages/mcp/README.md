@@ -25,6 +25,7 @@ All list tools cap output at 200 rows (default 50) and accept `offset` for pagin
 | Tool | Purpose |
 | --- | --- |
 | `create_candidate` | File proposed work for review (candidate-first). |
+| `promote_candidate` / `reject_candidate` | Promote a candidate to a work item (and link it) or reject it. |
 | `create_work_item` | Create accepted work. `autonomous_safe` requires `operator_grant`. |
 | `update_work_item` | Update fields and add/remove governance tags (audited). |
 | `claim_next` | Claim the highest-priority eligible work item (race-safe; expires stale claims). |

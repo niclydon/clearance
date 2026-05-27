@@ -23,6 +23,8 @@ import {
   closeVerified,
   createCandidate,
   createWorkItem,
+  promoteCandidate,
+  rejectCandidate,
   runPackCreate,
   runPackRecord,
   updateWorkItem,
@@ -161,6 +163,43 @@ export function createServer(pool: pg.Pool): McpServer {
       },
     },
     async (args) => guarded(() => createCandidate(pool, args)),
+  );
+
+  server.registerTool(
+    'promote_candidate',
+    {
+      title: 'Promote a candidate to a work item',
+      description:
+        'Create a work item from a candidate (with optional overrides), mark the candidate approved, and link them. The new work item carries no tags — autonomous_safe stays a separate human grant.',
+      inputSchema: {
+        candidate_id: z.number().int(),
+        overrides: z
+          .object({
+            title: z.string().optional(),
+            body: z.string().optional(),
+            category: z.string().optional(),
+            priority: z.number().int().optional(),
+            work_type: z.string().optional(),
+            source: z.string().optional(),
+            operator_note: z.string().optional(),
+          })
+          .optional(),
+      },
+    },
+    async (args) => guarded(() => promoteCandidate(pool, args)),
+  );
+
+  server.registerTool(
+    'reject_candidate',
+    {
+      title: 'Reject a candidate',
+      description: 'Mark a candidate rejected (it does not become a work item).',
+      inputSchema: {
+        candidate_id: z.number().int(),
+        reason: z.string().optional(),
+      },
+    },
+    async (args) => guarded(() => rejectCandidate(pool, args)),
   );
 
   server.registerTool(

@@ -110,6 +110,93 @@ export async function createCandidate(
   return rows[0]!;
 }
 
+export interface PromoteCandidateOverrides {
+  title?: string;
+  body?: string;
+  category?: string;
+  priority?: number;
+  work_type?: string;
+  source?: string;
+  operator_note?: string;
+}
+
+export interface PromoteCandidateResult {
+  candidate: WorkItemCandidate;
+  work_item: WorkItem;
+}
+
+/**
+ * Promote a candidate to a real work item in one transaction: create the work
+ * item from the candidate's proposed_* fields (with optional overrides), mark
+ * the candidate approved, and link it via created_work_item_id. The new work
+ * item carries no tags — granting autonomous_safe stays a separate human act
+ * (update_work_item with operator_grant), so promotion cannot self-promote.
+ */
+export async function promoteCandidate(
+  pool: pg.Pool,
+  input: { candidate_id: number; overrides?: PromoteCandidateOverrides },
+): Promise<PromoteCandidateResult> {
+  const overrides = input.overrides ?? {};
+  return withTx(pool, async (client) => {
+    const found = await client.query<WorkItemCandidate>(
+      'SELECT * FROM work_item_candidates WHERE id = $1 FOR UPDATE',
+      [input.candidate_id],
+    );
+    const candidate = found.rows[0];
+    if (!candidate) {
+      throw new GovernanceError(`Candidate ${input.candidate_id} not found.`);
+    }
+    if (candidate.created_work_item_id) {
+      throw new GovernanceError(
+        `Candidate ${input.candidate_id} was already promoted to work item ${candidate.created_work_item_id}.`,
+      );
+    }
+    const created = await client.query<WorkItem>(
+      `INSERT INTO work_items (title, body, category, priority, source, work_type, operator_note)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [
+        overrides.title ?? candidate.proposed_title,
+        overrides.body ?? candidate.proposed_body,
+        overrides.category ?? candidate.proposed_category ?? '',
+        overrides.priority ?? candidate.proposed_priority,
+        overrides.source ?? `promoted-from-candidate:${candidate.id}`,
+        overrides.work_type ?? null,
+        overrides.operator_note ?? '',
+      ],
+    );
+    const workItem = created.rows[0]!;
+    const updated = await client.query<WorkItemCandidate>(
+      `UPDATE work_item_candidates
+       SET status = 'approved', reviewed_at = now(), created_work_item_id = $2
+       WHERE id = $1
+       RETURNING *`,
+      [candidate.id, workItem.id],
+    );
+    return { candidate: updated.rows[0]!, work_item: workItem };
+  });
+}
+
+/** Reject a candidate (it does not become a work item). */
+export async function rejectCandidate(
+  pool: pg.Pool,
+  input: { candidate_id: number; reason?: string },
+): Promise<WorkItemCandidate> {
+  const { rows } = await pool.query<WorkItemCandidate>(
+    `UPDATE work_item_candidates
+     SET status = 'rejected',
+         reviewed_at = now(),
+         metadata = metadata || jsonb_build_object('reject_reason', $2::text)
+     WHERE id = $1
+     RETURNING *`,
+    [input.candidate_id, input.reason ?? ''],
+  );
+  if (!rows[0]) {
+    throw new GovernanceError(`Candidate ${input.candidate_id} not found.`);
+  }
+  return rows[0];
+}
+
 export interface CreateWorkItemInput {
   title: string;
   body?: string;

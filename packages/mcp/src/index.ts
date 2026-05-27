@@ -14,6 +14,8 @@ export type { ListResult, ListWorkItemsFilters, Digest } from './read.js';
 export {
   GovernanceError,
   createCandidate,
+  promoteCandidate,
+  rejectCandidate,
   createWorkItem,
   updateWorkItem,
   claimNext,

@@ -10,6 +10,8 @@ import {
   closeVerified,
   createCandidate,
   createWorkItem,
+  promoteCandidate,
+  rejectCandidate,
   runPackCreate,
   runPackRecord,
   updateWorkItem,
@@ -202,5 +204,54 @@ suite('clearance mcp write tools', () => {
       operator_grant: true,
     });
     expect(granted.tags).toContain('autonomous_safe');
+  });
+
+  it('promotes a candidate into a work item and links them', async () => {
+    const candidate = await createCandidate(pool, {
+      proposed_title: 'wire up metrics',
+      proposed_priority: 30,
+    });
+    const { candidate: promoted, work_item } = await promoteCandidate(pool, {
+      candidate_id: candidate.id,
+    });
+    expect(work_item.title).toBe('wire up metrics');
+    expect(work_item.priority).toBe(30);
+    expect(work_item.tags).toEqual([]); // promotion never grants autonomous_safe
+    expect(promoted.status).toBe('approved');
+    expect(promoted.created_work_item_id).toBe(work_item.id);
+
+    // A promoted candidate no longer counts as pending.
+    const pending = await pool.query<{ c: number }>(
+      `SELECT count(*)::int AS c FROM work_item_candidates WHERE status = 'pending'`,
+    );
+    expect(pending.rows[0]!.c).toBe(0);
+
+    // Double-promotion is rejected.
+    await expect(promoteCandidate(pool, { candidate_id: candidate.id })).rejects.toBeInstanceOf(
+      GovernanceError,
+    );
+  });
+
+  it('promotes with overrides', async () => {
+    const candidate = await createCandidate(pool, { proposed_title: 'raw title' });
+    const { work_item } = await promoteCandidate(pool, {
+      candidate_id: candidate.id,
+      overrides: { title: 'cleaned title', work_type: 'feature', priority: 70 },
+    });
+    expect(work_item.title).toBe('cleaned title');
+    expect(work_item.work_type).toBe('feature');
+    expect(work_item.priority).toBe(70);
+  });
+
+  it('rejects a candidate', async () => {
+    const candidate = await createCandidate(pool, { proposed_title: 'not worth it' });
+    const rejected = await rejectCandidate(pool, {
+      candidate_id: candidate.id,
+      reason: 'duplicate',
+    });
+    expect(rejected.status).toBe('rejected');
+    await expect(rejectCandidate(pool, { candidate_id: -1 })).rejects.toBeInstanceOf(
+      GovernanceError,
+    );
   });
 });
